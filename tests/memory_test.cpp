@@ -20,12 +20,16 @@ TEST(PhysicalMemoryTest, OutOfBoundsThrows) {
 }
 
 TEST(PhysicalMemoryTest, ConcurrentAccess) {
+    constexpr int kIterations = 100;
+    constexpr Address kRegionStride = kIterations * sizeof(Word);
+
     PhysicalMemory memory(4096);
     std::vector<std::thread> threads;
     for (int t = 0; t < 4; ++t) {
         threads.emplace_back([&memory, t]() {
-            for (int i = 0; i < 100; ++i) {
-                const Address address = static_cast<Address>(t * 100 + i * 4);
+            for (int i = 0; i < kIterations; ++i) {
+                const Address address =
+                    static_cast<Address>(t * kRegionStride + i * sizeof(Word));
                 memory.writeWord(address, static_cast<Word>(t * 1000 + i));
             }
         });
@@ -34,7 +38,9 @@ TEST(PhysicalMemoryTest, ConcurrentAccess) {
         thread.join();
     }
     EXPECT_EQ(memory.readWord(0), 0u);
-    EXPECT_EQ(memory.readWord(100), 1000u);
+    EXPECT_EQ(memory.readWord(400), 1000u);
+    EXPECT_EQ(memory.readWord(800), 2000u);
+    EXPECT_EQ(memory.readWord(1200), 3000u);
 }
 
 TEST(ProcessMemoryTest, CodeAndDataSegments) {
