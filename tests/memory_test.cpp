@@ -26,7 +26,7 @@ TEST(PhysicalMemoryTest, ConcurrentAccess) {
     PhysicalMemory memory(4096);
     std::vector<std::thread> threads;
     for (int t = 0; t < 4; ++t) {
-        threads.emplace_back([&memory, t]() {
+        threads.emplace_back([&memory, t, kIterations, kRegionStride]() {
             for (int i = 0; i < kIterations; ++i) {
                 const Address address =
                     static_cast<Address>(t * kRegionStride + i * sizeof(Word));
